@@ -1,0 +1,70 @@
+#!/bin/bash
+#vérification du nombre de paramètres
+if (($#!=1))
+	then echo "Erreur : Nombre d'arguments incorrects"
+	exit 1
+fi
+#lecture ligne par ligne
+while read ligne
+	do
+		#initialisation de problème (il n'y a aucun problème au début)
+		((probleme=0))
+		#création login
+		nom=$(echo $ligne|cut -d':' -f1)
+		prenom=$(echo $ligne|cut -d':' -f2)
+		pl=$(echo $nom|cut -c1)
+		login=($pl"_"$prenom)
+		#première partie du mdp
+		ppmdp=$(echo $nom|cut -c $(echo $((1 + RANDOM % $(($(echo $nom|wc -c)-1)))))|tr '[a-z]' '[A-Z]')
+		#deuxième partie du mdp
+		dpmdp=$(echo $prenom|cut -c $(echo $((1 + RANDOM % $(($(echo $prenom|wc -c)-1)))))|tr '[A-Z]' '[a-z]')
+		#troisème partie du mdp
+		num=$(echo $ligne|cut -d':' -f4)
+		((tpmdp= 10#$(echo $num|cut -c1,2) + 10#$(echo $num|cut -c3,4) + 10#$(echo $num|cut -c5,6) + 10#$(echo $num|cut -c7,8) + 10#$(echo $num|cut -c9,10) ))
+		#quatrième partie du mdp
+		qpmdp=$(echo '%/!?,;*+@\#&~[-].}{'|cut -c $(echo $((1 + RANDOM % 18))))
+		#cinquième partie du mdp
+		mois=10#$(echo $ligne|cut -d':' -f5|cut -d'/' -f2)
+		if (($mois==1 || $mois==6 || $mois==7))
+			then cpmdp="j"
+		elif (($mois==2))
+			then cpmdp="f"
+		elif (($mois==3 || $mois==5))
+			then cpmdp="m"
+		elif (($mois==4 || $mois==8))
+			then cpmdp="a"
+		elif (($mois==9))
+			then cpmdp="s"
+		elif (($mois==10))
+			then cpmdp="o"
+		elif (($mois==11))
+			then cpmdp="n"
+		elif (($mois==12))
+			then cpmdp="d"
+		else ((probleme=1))
+		fi
+		((annee=10#$(echo $ligne|cut -d':' -f3)))
+		#vérification d'une bonne année
+		if (($annee!=1 && $annee!=2 && $annee!=3))
+			then ((probleme=2))
+		fi
+		#création des fichiers (qui contiendront les mdps)
+		if test ! -f /home/etudiants/Annee"$annee"/Utilisateurs_A"$annee" && (($probleme==0))
+			then touch /home/etudiants/Annee"$annee"/Utilisateurs_A"$annee"
+				chmod 600 /home/etudiants/Annee"$annee"/Utilisateurs_A"$annee"
+		fi
+		#assemblage du mdp
+		mdp=("$ppmdp$dpmdp$tpmdp$qpmdp$cpmdp")
+		#vérification des problèmes
+		#création des comptes
+		if ((probleme==0))
+		then echo "Ajout de l'utilisateur $login"
+			useradd $login --groups groupe_"$annee" --gid groupe_"$annee" -m -d /home/etudiants/Annee"$annee"/$login
+			echo "$login:$mdp" | chpasswd
+			echo "$nom" "$prenom" "$login" "$mdp" >> /home/etudiants/Annee"$annee"/Utilisateurs_A"$annee"
+			chmod 700 /home/etudiants/Annee"$annee"/$login
+		#message d'erreur
+		else echo "Erreur dans l'ajout de $login"
+		fi
+#entrée du script
+done < $1

@@ -1,0 +1,9 @@
+sudo userdel -r P_Maxence 2>/dev/null
+sudo userdel -r G_Bayram 2>/dev/null
+sudo userdel -r C_Nasser 2>/dev/null
+sudo userdel -r B_Le 2>/dev/null
+sudo userdel -r C_Sedat 2>/dev/null
+sudo userdel -r L_Pierre 2>/dev/null
+rm /home/etudiants/Annee1/Utilisateurs_A1
+rm /home/etudiants/Annee2/Utilisateurs_A2
+rm /home/etudiants/Annee3/Utilisateurs_A3
